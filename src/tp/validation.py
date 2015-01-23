@@ -5,6 +5,7 @@ Created on 2015-01-21
 '''
 
 import requests
+import csv
 
 def check_ssl(url):
     try:
@@ -15,4 +16,12 @@ def check_ssl(url):
         
         
 if __name__ == "__main__":
+    with open('../../googletop1000april2010.csv','rb') as file:
+        contents = csv.reader(file)
+        list = []
+        for row in contents:
+            list.append(row)
+
+        for row in list:
+            print row
     check_ssl('http://www.facebook.com')
