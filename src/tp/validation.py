@@ -3,6 +3,7 @@ from M2Crypto.SSL.Checker import NoCertificate, WrongCertificate, WrongHost
 import socket, re
 from datetime import datetime
 import csv
+import xlwt
 
 
 class ValidationResults:
@@ -28,7 +29,7 @@ No certificate:\t\t%s
 Wrong certificate:\t%s
 Wrong host:\t\t%s
 Certificate expired:\t%s
-Expiration date:\t%s
+Expiration date:\t%ss
 Unknown error:\t\t%s
 Inner exception:\t%s
 Day Left:       \t%s
@@ -45,7 +46,9 @@ Issuer:             \t%s
         self.inner_exception,
         self.dayLeft,
         self.issuer)
-    
+    def get_hostname(self):
+         return self.hostName
+     
 class Validator:
     
     numericIpMatch = re.compile('^[0-9]+(\.[0-9]+)*$')
@@ -101,15 +104,56 @@ class Validator:
 
         val_results.expiration_date = cert.get_not_after().get_datetime()
         val_results.issuer = cert.get_issuer().organizationName
+        
+        #=======================================================================
+        # sheet1.write(nbWebSites, 0, val_results.hostName)
+        # sheet1.write(nbWebSites, 1, val_results.connection_error)
+        # sheet1.write(nbWebSites, 2, val_results.no_certificate)
+        # sheet1.write(nbWebSites, 3,val_results.wrong_certificate)
+        # sheet1.write(nbWebSites, 4, val_results.wrong_host)
+        # sheet1.write(nbWebSites, 5, val_results.certificate_expired)
+        # sheet1.write(nbWebSites, 6,val_results.expiration_date)
+        # sheet1.write(nbWebSites, 7,val_results.unknown_error)
+        # sheet1.write(nbWebSites, 8, val_results.inner_exception)
+        # sheet1.write(nbWebSites, 9, val_results.dayLeft)
+        # sheet1.write(nbWebSites, 10,val_results.issuer)
+        #=======================================================================
+        
+        
         return val_results
+    
+        
+    
+    
 
 if __name__ == '__main__':
+    book = xlwt.Workbook(encoding="utf-8")
+    sheet1 = book.add_sheet("Stats")
+    sheet1.write(0, 0, "Hostname")
+    sheet1.write(0, 1, "Connection error")
+    sheet1.write(0, 2, "No certificate")
+    sheet1.write(0, 3, "Wrong certificate")
+    sheet1.write(0, 4, "Wrong host")
+    sheet1.write(0, 5, "Certificate expired")
+    sheet1.write(0, 6, "Expiration date")
+    sheet1.write(0, 7, "Unknown error")
+    sheet1.write(0, 8, "Inner exception")
+    sheet1.write(0, 9, "Day left")
+    sheet1.write(0, 10, "Issuer")
+    
+    nbWebSites = 0
+    
+  
     with open('../../googletop1000april2010.csv','rb') as f:
         reader = csv.reader(f, delimiter=';')
         for row in reader:
             if row[0] != "Site":
                 get_cert_from = "www." + row[0]
+                nbWebSites = nbWebSites +1
                 hostname = row[0]
                 port = 443
                 v = Validator()
-                print v(hostname, get_cert_from, port)
+                results =  v(hostname, get_cert_from, port)
+                print results
+    book.save("stats.xls")           
+    
